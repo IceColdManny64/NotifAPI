@@ -1,5 +1,6 @@
 package com.example.notifapi
 
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -20,6 +21,13 @@ import java.util.concurrent.TimeUnit
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS) !=
+                android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                requestPermissions(arrayOf(android.Manifest.permission.POST_NOTIFICATIONS), 1001)
+            }
+        }
+
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
@@ -30,6 +38,22 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+
+        if (requestCode == 1001) {
+            if (grantResults.isNotEmpty() && grantResults[0] == android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                // El usuario otorgó el permiso
+            } else {
+                // El usuario denegó el permiso
+            }
+        }
+    }
+
 }
 
 @Composable
@@ -59,6 +83,8 @@ fun NotificationScreen(modifier: Modifier = Modifier) {
     }
 }
 
+
+
 @Preview(showBackground = true)
 @Composable
 fun NotificationScreenPreview() {
@@ -66,3 +92,4 @@ fun NotificationScreenPreview() {
         NotificationScreen()
     }
 }
+
