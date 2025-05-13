@@ -5,14 +5,21 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import com.example.notifapi.classes.NotificationWorker
@@ -71,15 +78,46 @@ fun NotificationScreen(modifier: Modifier = Modifier) {
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        Button(onClick = {
-            val workRequest = OneTimeWorkRequestBuilder<NotificationWorker>()
-                .setInitialDelay(5, TimeUnit.SECONDS) // espera simulada
-                .build()
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable{
+                    val workRequest = OneTimeWorkRequestBuilder<NotificationWorker>()
+                    .setInitialDelay(5, TimeUnit.SECONDS) // espera simulada
+                    .build()
 
-            WorkManager.getInstance(context).enqueue(workRequest)
-        }) {
-            Text("Iniciar Worker")
+                    WorkManager.getInstance(context).enqueue(workRequest)
+                }
+        ){
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceEvenly){
+                Column() {
+                    Image(painter = painterResource(R.drawable.archivopdf),
+                        contentDescription = null,
+                        contentScale = ContentScale.Inside,
+                        modifier = Modifier
+                            .size(60.dp))
+                }
+                Column(
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.padding(30.dp)
+                ) {
+                    Text(
+                        text = "Descargar este archivo",
+                        textAlign = TextAlign.Center,)
+                }
+                Column() {
+                    Image(painter = painterResource(R.drawable.descarga),
+                        contentDescription = null,
+                        contentScale = ContentScale.Inside,
+                        modifier = Modifier
+                            .size(50.dp))
+                }
+            }
         }
+
     }
 }
 
