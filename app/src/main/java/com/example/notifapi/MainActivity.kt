@@ -1,8 +1,5 @@
 package com.example.notifapi
 
-import android.R.attr.text
-import android.app.Activity
-import android.graphics.ColorFilter
 import android.os.Build
 import android.os.Bundle
 import android.widget.Toast
@@ -12,17 +9,28 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.*
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -32,12 +40,10 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import com.example.notifapi.classes.NotificationWorker
 import com.example.notifapi.ui.theme.NotifAPITheme
-import kotlinx.coroutines.launch
 import java.util.concurrent.TimeUnit
 
 
@@ -70,9 +76,9 @@ class MainActivity : ComponentActivity() {
 
         if (requestCode == 1001) {
             if (grantResults.isNotEmpty() && grantResults[0] == android.content.pm.PackageManager.PERMISSION_GRANTED) {
-
+                Toast.makeText(this, "Permiso de notificación otorgado", Toast.LENGTH_SHORT).show()
             } else {
-
+                Toast.makeText(this, "Permiso de notificación denegado", Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -81,27 +87,8 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun NotificationScreen(modifier: Modifier = Modifier) {
     val context = LocalContext.current
-    val scope = rememberCoroutineScope()
     var showDownloadComplete by remember { mutableStateOf(false) }
 
-    DisposableEffect(Unit) {
-
-        val intentHandler = object : Activity() {
-            override fun onCreate(savedInstanceState: Bundle?) {
-                super.onCreate(savedInstanceState)
-                if (intent?.getBooleanExtra("download_complete", false) == true) {
-                    showDownloadComplete = true
-                }
-            }
-        }
-
-        val intent = (context as? Activity)?.intent
-        if (intent?.getBooleanExtra("download_complete", false) == true) {
-            showDownloadComplete = true
-        }
-
-        onDispose { }
-    }
     LaunchedEffect(showDownloadComplete) {
         if (showDownloadComplete) {
             Toast.makeText(context, "Descarga finalizada", Toast.LENGTH_SHORT).show()
@@ -136,14 +123,11 @@ fun NotificationScreen(modifier: Modifier = Modifier) {
             modifier = Modifier
                 .fillMaxWidth()
                 .clickable {
-                    showDownloadComplete = false
                     val workRequest = OneTimeWorkRequestBuilder<NotificationWorker>()
-                        .setInitialDelay(5, TimeUnit.SECONDS)
+                        .setInitialDelay(5, TimeUnit.SECONDS) // espera simulada
                         .build()
+
                     WorkManager.getInstance(context).enqueue(workRequest)
-                    scope.launch { //muestra el mensaje de manera inmediata
-                        Toast.makeText(context, "Descarga iniciada", Toast.LENGTH_SHORT).show()
-                    }
                 },
             colors = CardDefaults.cardColors(
                 containerColor = MaterialTheme.colorScheme.surfaceVariant,

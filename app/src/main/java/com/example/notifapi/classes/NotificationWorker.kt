@@ -1,20 +1,19 @@
 package com.example.notifapi.classes
 
 import android.Manifest
-import android.R
-import android.app.PendingIntent
-import android.content.Intent
-import com.example.notifapi.MainActivity
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.PendingIntent
 import android.content.Context
-import android.media.RingtoneManager
+import android.content.Intent
 import android.os.Build
 import androidx.annotation.RequiresPermission
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.work.Worker
 import androidx.work.WorkerParameters
+import com.example.notifapi.MainActivity
+
 class NotificationWorker(appContext: Context, workerParams: WorkerParameters) :
     Worker(appContext, workerParams) {
 
@@ -24,19 +23,7 @@ class NotificationWorker(appContext: Context, workerParams: WorkerParameters) :
     @RequiresPermission(Manifest.permission.POST_NOTIFICATIONS)
     override fun doWork(): Result {
         createNotificationChannel()
-        val notificationManager = NotificationManagerCompat.from(applicationContext)
 
-        val builder = setupInitialNotification()
-        notificationManager.notify(notificationId, builder.build())
-
-        simulateDownloadProgress(notificationManager, builder)
-
-        showCompletionNotification(notificationManager)
-
-        return Result.success()
-    }
-
-    private fun setupInitialNotification(): NotificationCompat.Builder {
         val intent = Intent(applicationContext, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         }
@@ -48,7 +35,7 @@ class NotificationWorker(appContext: Context, workerParams: WorkerParameters) :
             PendingIntent.FLAG_IMMUTABLE
         )
 
-        return NotificationCompat.Builder(applicationContext, channelId)
+        val builder = NotificationCompat.Builder(applicationContext, channelId)
             .setSmallIcon(android.R.drawable.stat_sys_download)
             .setContentTitle("Descargando archivo...")
             .setContentText("Progreso de descarga")
@@ -57,66 +44,40 @@ class NotificationWorker(appContext: Context, workerParams: WorkerParameters) :
             .setProgress(100, 0, false)
             .setContentIntent(pendingIntent)
             .setAutoCancel(true)
-    }
 
-    @RequiresPermission(Manifest.permission.POST_NOTIFICATIONS)
-    private fun simulateDownloadProgress(
-        notificationManager: NotificationManagerCompat,
-        builder: NotificationCompat.Builder
-    ) {
+        val notificationManager = NotificationManagerCompat.from(applicationContext)
+        notificationManager.notify(notificationId, builder.build())
+
         for (i in 1..100 step 10) {
-            try {
-                Thread.sleep(500)
-                builder.setProgress(100, i, false)
-                    .setContentText("Descargando... $i%")
-                notificationManager.notify(notificationId, builder.build())
-            } catch (e: InterruptedException) {
-                e.printStackTrace()
-            }
-        }
-    }
-
-    @RequiresPermission(Manifest.permission.POST_NOTIFICATIONS)
-    private fun showCompletionNotification(notificationManager: NotificationManagerCompat) {
-        val intent = Intent(applicationContext, MainActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-            putExtra("download_complete", true)
+            Thread.sleep(500)
+            builder.setProgress(100, i, false)
+            notificationManager.notify(notificationId, builder.build())
         }
 
-        val pendingIntent = PendingIntent.getActivity(
-            applicationContext,
-            0,
-            intent,
-            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
-        )
-
-        val notification = NotificationCompat.Builder(applicationContext, channelId)
-            .setSmallIcon(R.drawable.stat_sys_download_done)
-            .setContentTitle("Descarga completada")
+        builder.setContentTitle("Descarga completada")
             .setContentText("Toca para abrir la app")
-            .setPriority(NotificationCompat.PRIORITY_DEFAULT) // Aumentamos prioridad
-            .setContentIntent(pendingIntent)
+            .setSmallIcon(android.R.drawable.stat_sys_download_done)
+            .setProgress(0, 0, false)
             .setAutoCancel(true)
-            .setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION))
-            .build()
 
-        notificationManager.notify(notificationId, notification)
+        notificationManager.notify(notificationId, builder.build())
+
+        return Result.success()
     }
+
 
     private fun createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val name = "Descargas"
-            val descriptionText = "Notificaciones de progreso de descargas"
-            val importance = NotificationManager.IMPORTANCE_DEFAULT // Cambiado para que suene al completar
+            val name = "Default Channel"
+            val descriptionText = "Canal para notificaciones de descargas"
+            val importance = NotificationManager.IMPORTANCE_LOW
             val channel = NotificationChannel(channelId, name, importance).apply {
                 description = descriptionText
-                setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION), null)
             }
-
-            val notificationManager = applicationContext.getSystemService(
-                NotificationManager::class.java
-            ) as NotificationManager
+            val notificationManager: NotificationManager =
+                applicationContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             notificationManager.createNotificationChannel(channel)
         }
     }
 }
+
