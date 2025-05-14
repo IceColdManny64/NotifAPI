@@ -105,7 +105,7 @@ fun NotificationScreen(modifier: Modifier = Modifier) {
     LaunchedEffect(showDownloadComplete) {
         if (showDownloadComplete) {
             Toast.makeText(context, "Descarga finalizada", Toast.LENGTH_SHORT).show()
-            showDownloadComplete = false // Resetear el estado
+            showDownloadComplete = false
         }
     }
 
